@@ -29,10 +29,13 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   google_fonts: ^4.0.3
+  html_unescape: ^2.0.0
   flutter:
     sdk: flutter
-
-
+  shared_preferences: ^2.2.2 # Pour le stockage local
+  provider: ^6.1.1
+  audioplayers: ^5.2.1 # Pour les sons
+  flutter_local_notifications: ^17.2.1+1 # Pour les notifications
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8

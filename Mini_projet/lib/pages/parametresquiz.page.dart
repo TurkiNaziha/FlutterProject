@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'quiz_page.dart';
+import 'app_state.dart';
 
 class ParametresQuizPage extends StatefulWidget {
-  String category = "";
   @override
   _ParametresQuizPageState createState() => _ParametresQuizPageState();
 }
@@ -13,30 +15,28 @@ class _ParametresQuizPageState extends State<ParametresQuizPage> {
   String? selectDifficulty;
   int? _selectedNumberOfQuestions;
   int? selectedCategoryId;
+  List<Map<String, dynamic>> categories = [];
 
-  final List<String> difficulties = ['Facile', 'Moyen', 'Difficile'];
+  final List<String> difficulties = ['Easy', 'Medium', 'Hard'];
   final List<int> _numberOfQuestions = [5, 10, 15, 20];
 
   @override
-  var categoryData;
-  List<Map<String, dynamic>> categories = [];
-  void initState(){
+  void initState() {
     super.initState();
     getCategoryData();
   }
 
-  void getCategoryData (){
+  void getCategoryData() {
     String url = "https://opentdb.com/api_category.php";
     http.get(Uri.parse(url)).then((resp) {
       setState(() {
         var decodedData = json.decode(resp.body);
-        this.categoryData = decodedData;
-        categories = List<Map<String, dynamic>>.from(decodedData['trivia_categories'].map((category)=>{
-          'id':category['id'],
-          'name':category['name']
-        }));
+        categories = List<Map<String, dynamic>>.from(
+            decodedData['trivia_categories'].map((category) => {
+              'id': category['id'],
+              'name': category['name'],
+            }));
       });
-      print(this.categoryData);
     }).catchError((err) {
       print(err);
     });
@@ -44,39 +44,63 @@ class _ParametresQuizPageState extends State<ParametresQuizPage> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+    Map<String, Map<String, String>> translations = {
+      'fr': {
+        'title': 'Paramétrer votre quiz',
+        'category': 'Catégorie',
+        'difficulty': 'Difficulté',
+        'questions': 'Nombre de questions',
+        'start': 'Commencer',
+        'select': 'Sélectionner tous les paramètres'
+      },
+      'en': {
+        'title': 'Set up your quiz',
+        'category': 'Category',
+        'difficulty': 'Difficulty',
+        'questions': 'Number of questions',
+        'start': 'Start',
+        'select': 'Please select all parameters'
+      },
+      'ar': {
+        'title': 'إعداد الاختبار الخاص بك',
+        'category': 'الفئة',
+        'difficulty': 'الصعوبة',
+        'questions': 'عدد الأسئلة',
+        'start': 'ابدأ',
+        'select': 'يرجى تحديد جميع المعلمات'
+      },
+    };
+    final t = translations[appState.language]!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Paramétrer votre quiz', style: GoogleFonts.paytoneOne(fontSize: 25, color: Colors.white),),
+        title: Text(t['title']!, style: GoogleFonts.paytoneOne(fontSize: 25, color: Colors.white)),
         backgroundColor: Color(0xFF8C52FF),
       ),
-      backgroundColor: Color(0xFF8C52FF),
+      backgroundColor: appState.isDarkMode ? Colors.grey[900] : Color(0xFF8C52FF),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Centre verticalement
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('images/paramsquiz.png',width: 300, height: 200, ),
+                Image.asset('images/paramsquiz.png', width: 300, height: 200),
                 SizedBox(height: 20),
-
-                // Choix de la catégorie
-                Text(
-                  'Catégorie',
-                  style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a)),
-                ),
+                Text(t['category']!, style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a))),
                 SizedBox(height: 10),
                 DropdownButton<int>(
                   iconEnabledColor: Colors.white,
                   value: selectedCategoryId,
-                  hint: Text('Sélectionner catégorie', style: GoogleFonts.exo2(color: Colors.white)),
+                  hint: Text('Select category', style: GoogleFonts.exo2(color: Colors.white)),
                   dropdownColor: Color(0xFF8C52FF),
                   onChanged: (int? newValue) {
                     setState(() {
-                      selectedCategoryId=newValue;
+                      selectedCategoryId = newValue;
                     });
                   },
-                  items: categories.map<DropdownMenuItem<int>>((Map<String, dynamic>category){
+                  items: categories.map<DropdownMenuItem<int>>((Map<String, dynamic> category) {
                     return DropdownMenuItem<int>(
                       value: category['id'],
                       child: Text(category['name'], style: GoogleFonts.exo2(color: Colors.white)),
@@ -84,12 +108,7 @@ class _ParametresQuizPageState extends State<ParametresQuizPage> {
                   }).toList(),
                 ),
                 SizedBox(height: 20),
-
-                // Choix de la difficulté
-                Text(
-                  'Difficulté',
-                  style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a)),
-                ),
+                Text(t['difficulty']!, style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a))),
                 SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -106,27 +125,19 @@ class _ParametresQuizPageState extends State<ParametresQuizPage> {
                           },
                           activeColor: Colors.white,
                         ),
-                        Text(
-                          difficulty,
-                          style: GoogleFonts.exo2(color: Colors.white),
-                        ),
+                        Text(difficulty, style: GoogleFonts.exo2(color: Colors.white)),
                         SizedBox(width: 40),
                       ],
                     );
                   }).toList(),
                 ),
                 SizedBox(height: 20),
-
-                // Choix du nombre de questions
-                Text(
-                  'Nombre de questions',
-                  style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a)),
-                ),
+                Text(t['questions']!, style: GoogleFonts.lilitaOne(fontSize: 23, color: Color(0xFFf5c93a))),
                 SizedBox(height: 10),
                 DropdownButton<int>(
                   iconEnabledColor: Colors.white,
                   value: _selectedNumberOfQuestions,
-                  hint: Text('Nombre de questions', style: GoogleFonts.exo2(color: Colors.white)),
+                  hint: Text('Number of questions', style: GoogleFonts.exo2(color: Colors.white)),
                   dropdownColor: Color(0xFF8C52FF),
                   onChanged: (int? newValue) {
                     setState(() {
@@ -141,6 +152,34 @@ class _ParametresQuizPageState extends State<ParametresQuizPage> {
                   }).toList(),
                 ),
                 SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: () {
+                    if (selectedCategoryId != null && selectDifficulty != null && _selectedNumberOfQuestions != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuizPage(
+                            categoryId: selectedCategoryId!,
+                            difficulty: selectDifficulty!.toLowerCase(),
+                            numberOfQuestions: _selectedNumberOfQuestions!,
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(t['select']!)),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFf5c93a),
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  ),
+                  child: Text(
+                    t['start']!,
+                    style: GoogleFonts.lilitaOne(fontSize: 20, color: Color(0xFF8C52FF)),
+                  ),
+                ),
               ],
             ),
           ),
